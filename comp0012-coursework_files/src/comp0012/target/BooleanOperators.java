@@ -46,4 +46,8 @@ public class BooleanOperators{
 
 
     }
+    public void test_minus(){
+        int a = 5;
+        int b = -a;
+    }
 }

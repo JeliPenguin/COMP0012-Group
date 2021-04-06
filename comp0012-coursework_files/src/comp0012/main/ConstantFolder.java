@@ -174,7 +174,109 @@ public class ConstantFolder
 
 	enum binOps{
 		//Enum for binary operations, used to achieve switch case
-		IADD,FADD,DADD,LADD,ISUB,FSUB,DSUB,LSUB,IDIV,FDIV,DDIV,LDIV,IMUL,FMUL,DMUL,LMUL,IXOR,LXOR,IAND,LAND,LOR,IOR,LCMP,DCMPG,DCMPL,FCMPG,FCMPL;
+		IADD,FADD,DADD,LADD,ISUB,FSUB,DSUB,LSUB,IDIV,FDIV,DDIV,LDIV,IMUL,FMUL,DMUL,LMUL,IXOR,LXOR,IAND,LAND,LOR,IOR;
+	}
+	
+	enum compareOps{
+		LCMP,DCMPG,DCMPL,FCMPG,FCMPL;
+	}
+
+	public boolean comparisonFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
+		boolean changed = false;
+		InstructionFinder itf = new InstructionFinder(il);
+		Iterator iter = itf.search("PushInstruction PushInstruction (LCMP | DCMPL | DCMPG | FCMPL | FCMPG) InstructionTargeter PushInstruction UnconditionalBranch PushInstruction StoreInstruction");
+
+		if (iter.hasNext()){
+			//Iterator return InstructionHandle
+			InstructionHandle[] instructions = (InstructionHandle[])iter.next();
+			displayInfo("Old instruction segment:",2);
+			for (InstructionHandle a : instructions){
+				displayInfo(a.getInstruction().toString(),4);
+			}
+			Number[] operands = new Number[2];
+			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
+			operands[1] = getPushedValue(instructions[1],cpgen,variableTable);
+			if (!(operands[0] == null || operands[1] == null)){
+				Instruction opcode = instructions[2].getInstruction();
+				compareOps opClass = compareOps.valueOf(opcode.getClass().getSimpleName());
+				Instruction newInstruction = null;
+				switch (opClass){
+
+					case LCMP:
+						if(operands[0].longValue() > operands[1].longValue()){
+							newInstruction = new ICONST(1);
+						}
+						else if (operands[0].longValue() == operands[1].longValue()){
+							newInstruction = new ICONST(0);
+						}
+						else{
+							newInstruction = new ICONST(-1);
+						}
+						break;
+						
+					case DCMPG:
+						if(operands[0].doubleValue() > operands[1].doubleValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
+					case DCMPL:
+						if(operands[0].doubleValue() < operands[1].doubleValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+					
+					case FCMPG:
+						if(operands[0].floatValue() > operands[1].floatValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
+					case FCMPL:
+						if(operands[0].floatValue() < operands[1].floatValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
+					
+				}
+
+				if(newInstruction != null){
+					changed = true;
+					displayInfo("New instruction segment:",2);
+					displayInfo(newInstruction.toString(),4);
+					instructions[0].setInstruction(newInstruction);
+					try {
+						il.delete(instructions[1]);
+						il.delete(instructions[2]);
+						il.delete(instructions[3]);
+						il.delete(instructions[4]);
+						il.delete(instructions[5]);
+						il.delete(instructions[6]);
+						il.delete(instructions[7]);
+						
+					}catch (TargetLostException | ArrayIndexOutOfBoundsException e){
+					}
+				}else{
+					displayInfo("Null newInstruction",2);
+				}
+			}
+			
+		}
+		displayInfo("\n",0);
+		return changed;
 	}
 
 	public boolean binaryOpFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
@@ -183,7 +285,7 @@ public class ConstantFolder
 		InstructionFinder itf = new InstructionFinder(il);
 		//Search through InstructionList for pattern: load load followed by an arithmetic instruction
 		//Iterator iter = itf.search("PushInstruction PushInstruction ArithmeticInstruction");
-		Iterator iter = itf.search("PushInstruction PushInstruction ( ArithmeticInstruction | LCMP | DCMPL | DCMPG | FCMPL | FCMPG )");
+		Iterator iter = itf.search("PushInstruction PushInstruction ArithmeticInstruction");
 		if (iter.hasNext()){
 			//Iterator return InstructionHandle
 			InstructionHandle[] instructions = (InstructionHandle[])iter.next();
@@ -254,55 +356,10 @@ public class ConstantFolder
 						newInstruction = new LDC2_W(cpgen.addLong(operands[0].longValue() * operands[1].longValue()));
 						break;
 
-					case DCMPG:
-						if(operands[0].doubleValue() > operands[1].doubleValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
-						}
-						break;
-
-					case DCMPL:
-						if(operands[0].doubleValue() < operands[1].doubleValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
-						}
-						break;
 					
-					case FCMPG:
-						if(operands[0].floatValue() > operands[1].floatValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
-						}
-						break;
-
-					case FCMPL:
-						if(operands[0].floatValue() < operands[1].floatValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
-						}
-						break;
-					case LCMP:
-						if(operands[0].longValue() > operands[1].longValue()){
-							newInstruction = new ICONST(1);
-						}
-						else if (operands[0].longValue() == operands[1].longValue()){
-							newInstruction = new ICONST(0);
-						}
-						else{
-							newInstruction = new ICONST(-1);
-						}
-						break;
-
 				}
-				if (newInstruction != null){
+
+				if(newInstruction != null){
 					changed = true;
 					displayInfo("New instruction segment:",2);
 					displayInfo(newInstruction.toString(),4);
@@ -372,6 +429,9 @@ public class ConstantFolder
 			changed = false;
 			displayInfo("Folding binary operation:",0);
 			if (binaryOpFold(il,cpgen,variableTable)){
+				changed = true;
+			}
+			if (comparisonFold(il,cpgen,variableTable)){
 				changed = true;
 			}
 		}
