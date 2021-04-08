@@ -118,8 +118,9 @@ public class ConstantFolder
 	JavaClass original = null;
 	JavaClass optimized = null;
 
-	String debuggingClass = "comp0012.target.BooleanOperators";
+	//String debuggingClass = "comp0012.target.BooleanOperators";
 	//String debuggingClass = "comp0012.target.ConstantVariableFolding";
+	String debuggingClass = "comp0012.target.myTest";
 	String currentClass = "";
 
 	boolean display = true;
@@ -222,7 +223,7 @@ public class ConstantFolder
 	public boolean comparisonFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
 		boolean changed = false;
 		InstructionFinder itf = new InstructionFinder(il);
-		Iterator iter = itf.search("PushInstruction PushInstruction (LCMP | DCMPL | DCMPG | FCMPL | FCMPG) InstructionTargeter PushInstruction UnconditionalBranch PushInstruction StoreInstruction");
+		Iterator iter = itf.search("PushInstruction PushInstruction (LCMP | DCMPL | DCMPG | FCMPL | FCMPG) InstructionTargeter PushInstruction UnconditionalBranch PushInstruction");
 
 		if (iter.hasNext()){
 			//Iterator return InstructionHandle
@@ -232,6 +233,18 @@ public class ConstantFolder
 				displayInfo(a.getInstruction().toString(),4);
 			}
 			Number[] operands = new Number[2];
+			while (isIterator(instructions[0],variableTable) || isIterator(instructions[1],variableTable)){
+				if (iter.hasNext()){
+					instructions = (InstructionHandle[])iter.next();
+					displayInfo("Ignored instruction segment:",2);
+					for (InstructionHandle a : instructions){
+						displayInfo(a.getInstruction().toString(),4);
+					}
+				}
+				else{
+					return false;
+				}
+			}
 			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
 			operands[1] = getPushedValue(instructions[1],cpgen,variableTable);
 			if (!(operands[0] == null || operands[1] == null)){
@@ -303,7 +316,6 @@ public class ConstantFolder
 						il.delete(instructions[4]);
 						il.delete(instructions[5]);
 						il.delete(instructions[6]);
-						il.delete(instructions[7]);
 
 					}catch (TargetLostException | ArrayIndexOutOfBoundsException e){
 					}
@@ -337,7 +349,18 @@ public class ConstantFolder
 				
 			}
 			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
-			
+			while (isIterator(instructions[0],variableTable)){
+				if (iter.hasNext()){
+					instructions = (InstructionHandle[])iter.next();
+					displayInfo("Ignored instruction segment:",2);
+					for (InstructionHandle a : instructions){
+						displayInfo(a.getInstruction().toString(),4);
+					}
+				}
+				else{
+					return false;
+				}
+			}
 			if (!(operands[0] == null)){
 				Instruction opcode = instructions[1].getInstruction();
 				
@@ -399,9 +422,19 @@ public class ConstantFolder
 			}
 			Number[] operands = new Number[2];
 			
-			if (isIterator(instructions[0],variableTable) || isIterator(instructions[1],variableTable)){
-				
+			while (isIterator(instructions[0],variableTable) || isIterator(instructions[1],variableTable)){
+				if (iter.hasNext()){
+					instructions = (InstructionHandle[])iter.next();
+					displayInfo("Ignored instruction segment:",2);
+					for (InstructionHandle a : instructions){
+						displayInfo(a.getInstruction().toString(),4);
+					}
+				}
+				else{
+					return false;
+				}
 			}
+
 			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
 			operands[1] = getPushedValue(instructions[1],cpgen,variableTable);
 			if (!(operands[0] == null || operands[1] == null)){
