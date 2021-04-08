@@ -345,10 +345,6 @@ public class ConstantFolder
 			}
 			Number[] operands = new Number[1];
 			
-			if (isIterator(instructions[0],variableTable) || isIterator(instructions[1],variableTable)){
-				
-			}
-			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
 			while (isIterator(instructions[0],variableTable)){
 				if (iter.hasNext()){
 					instructions = (InstructionHandle[])iter.next();
@@ -361,6 +357,7 @@ public class ConstantFolder
 					return false;
 				}
 			}
+			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
 			if (!(operands[0] == null)){
 				Instruction opcode = instructions[1].getInstruction();
 				
