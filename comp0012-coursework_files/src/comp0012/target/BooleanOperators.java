@@ -46,4 +46,14 @@ public class BooleanOperators{
 
 
     }
+    public void test_normal(){
+        int b = 12;
+        int a = 5+b;
+
+    }
+    public void test_minus(){
+        int a = 8;
+        int b = -a;
+
+    }
 }

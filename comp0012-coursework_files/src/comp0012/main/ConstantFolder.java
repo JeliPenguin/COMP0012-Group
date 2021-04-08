@@ -21,6 +21,7 @@ import org.apache.bcel.util.InstructionFinder;
 
 
 
+
 public class ConstantFolder
 {
 	public static class VariableTable{
@@ -117,7 +118,7 @@ public class ConstantFolder
 	JavaClass original = null;
 	JavaClass optimized = null;
 
-	String debuggingClass = "comp0012.target.myTest";
+	String debuggingClass = "comp0012.target.BooleanOperators";
 	//String debuggingClass = "comp0012.target.ConstantVariableFolding";
 	String currentClass = "";
 
@@ -214,6 +215,10 @@ public class ConstantFolder
 		LCMP,DCMPG,DCMPL,FCMPG,FCMPL;
 	}
 
+	enum unaryOps{
+		INEG,LNEG,DNEG,FNEG;
+	}
+
 	public boolean comparisonFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
 		boolean changed = false;
 		InstructionFinder itf = new InstructionFinder(il);
@@ -282,7 +287,7 @@ public class ConstantFolder
 							newInstruction = new ICONST(0);
 						}
 						break;
-
+					
 
 				}
 
@@ -308,6 +313,72 @@ public class ConstantFolder
 			}
 
 		}
+		displayInfo("\n",0);
+		return changed;
+	}
+
+	public boolean unaryOpFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
+		boolean changed = false;
+
+		InstructionFinder itf = new InstructionFinder(il);
+		//Search through InstructionList for pattern: load load followed by an arithmetic instruction
+		//Iterator iter = itf.search("PushInstruction PushInstruction ArithmeticInstruction");
+		Iterator iter = itf.search("PushInstruction (LNEG | FNEG | INEG | DNEG )");
+		if (iter.hasNext()){
+			//Iterator return InstructionHandle
+			InstructionHandle[] instructions = (InstructionHandle[])iter.next();
+			displayInfo("Old instruction segment:",2);
+			for (InstructionHandle a : instructions){
+				displayInfo(a.getInstruction().toString(),4);
+			}
+			Number[] operands = new Number[1];
+			
+			if (isIterator(instructions[0],variableTable) || isIterator(instructions[1],variableTable)){
+				
+			}
+			operands[0] = getPushedValue(instructions[0],cpgen,variableTable);
+			
+			if (!(operands[0] == null)){
+				Instruction opcode = instructions[1].getInstruction();
+				
+				unaryOps opClass = unaryOps.valueOf(opcode.getClass().getSimpleName());
+				Instruction newInstruction = null;
+				switch (opClass){
+					case INEG:
+						newInstruction = new LDC(cpgen.addInteger(operands[0].intValue() * -1));
+						
+						break;
+					case LNEG:
+						newInstruction = new LDC2_W(-cpgen.addLong(operands[0].longValue() * -1));
+						break;
+					case DNEG:
+						newInstruction = new LDC2_W( cpgen.addDouble(operands[0].doubleValue() * -1.0));
+						break;
+					case FNEG:
+						newInstruction = new LDC(-cpgen.addFloat(operands[0].floatValue() * -1));
+						break;
+					
+				}
+				if (newInstruction != null){
+					
+					changed = true;
+					displayInfo("New instruction segment:",2);
+					displayInfo(newInstruction.toString(),4);
+					instructions[0].setInstruction(newInstruction);
+					try {
+						il.delete(instructions[1]);
+						
+					}catch (TargetLostException e){
+						
+					}
+					
+				}else{
+					displayInfo("Null newInstruction",2);
+				}
+			}
+			
+		}
+		
 		displayInfo("\n",0);
 		return changed;
 	}
@@ -484,6 +555,10 @@ public class ConstantFolder
 			}
 			displayInfo("Folding comparison operation:",0);
 		    if (comparisonFold(il,cpgen,variableTable)){
+				changed = true;
+			}
+			displayInfo("Folding unary operation:",0);
+			if (unaryOpFold(il,cpgen,variableTable)){
 				changed = true;
 			}
 		}
