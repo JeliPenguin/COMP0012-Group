@@ -213,7 +213,7 @@ public class ConstantFolder
 	}
 
 	enum compareOps{
-		LCMP,DCMPG,DCMPL,FCMPG,FCMPL;
+		LCMP,DCMPG,DCMPL,FCMPG,FCMPL,IF_ICMPGE, IF_ICMPEQ, IF_ICMPLT, IF_ICMPNE,IF_ICMPGT, IF_ICMPLE, IFGE, IFLE,IFLT,IFGT,IFNE,IFEQ;
 	}
 
 	enum unaryOps{
@@ -250,41 +250,205 @@ public class ConstantFolder
 			if (!(operands[0] == null || operands[1] == null)){
 				Instruction opcode = instructions[2].getInstruction();
 				compareOps opClass = compareOps.valueOf(opcode.getClass().getSimpleName());
+
+				Instruction secondOpcode = instructions[3].getInstruction();
+				compareOps secondClass = compareOps.valueOf(secondOpcode.getClass().getSimpleName());
+				displayInfo(secondClass.toString(), 2);
 				Instruction newInstruction = null;
 				switch (opClass){
-
 					case LCMP:
-						if(operands[0].longValue() > operands[1].longValue()){
-							newInstruction = new ICONST(1);
+						switch(secondClass){
+							case IFLE:
+								if(operands[0].longValue() > operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFGE:
+								if(operands[0].longValue() < operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFGT:
+								if(operands[0].longValue() <= operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFLT:
+								if(operands[0].longValue() >= operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFNE:
+								if(operands[0].longValue() == operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFEQ:
+								if(operands[0].longValue() != operands[1].longValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
 						}
-						else if (operands[0].longValue() == operands[1].longValue()){
-							newInstruction = new ICONST(0);
-						}
-						else{
-							newInstruction = new ICONST(-1);
-						}
+
+
 						break;
 
+
 					case DCMPG:
-						if(operands[0].doubleValue() > operands[1].doubleValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
-						}
+
+						switch(secondClass){
+							case IFGT:
+								if(operands[0].doubleValue() <= operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFGE:
+								if(operands[0].doubleValue() < operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+						}	
 						break;
 
 					case DCMPL:
-						if(operands[0].doubleValue() < operands[1].doubleValue()){
-							newInstruction = new ICONST(1);
-						}
-						else{
-							newInstruction = new ICONST(0);
+
+						switch(secondClass){
+							case IFLT:
+								if(operands[0].doubleValue() >= operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFLE:
+								if(operands[0].doubleValue() > operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFNE:
+								if(operands[0].doubleValue() == operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFEQ:
+								if(operands[0].doubleValue() != operands[1].doubleValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
 						}
 						break;
 
 					case FCMPG:
-						if(operands[0].floatValue() > operands[1].floatValue()){
+
+						switch(secondClass){
+							case IFGT:
+								if(operands[0].floatValue() <= operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFGE:
+								if(operands[0].floatValue() < operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+						}	
+						break;
+
+					case FCMPL:
+						switch(secondClass){
+							case IFLT:
+								if(operands[0].floatValue() >= operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFLE:
+								if(operands[0].floatValue() > operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+
+							case IFNE:
+								if(operands[0].floatValue() == operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+							case IFEQ:
+								if(operands[0].floatValue() != operands[1].floatValue()){
+									newInstruction = new ICONST(1);
+								}
+								else{
+									newInstruction = new ICONST(0);
+								}
+								break;
+						}
+						break;
+
+					case IF_ICMPGE:
+						if(operands[0].intValue() < operands[1].intValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+					case IF_ICMPGT:
+						if(operands[0].intValue() <= operands[1].intValue()){
 							newInstruction = new ICONST(1);
 						}
 						else{
@@ -292,15 +456,42 @@ public class ConstantFolder
 						}
 						break;
 
-					case FCMPL:
-						if(operands[0].floatValue() < operands[1].floatValue()){
+					case IF_ICMPLE:
+						if(operands[0].intValue() > operands[1].intValue()){
 							newInstruction = new ICONST(1);
 						}
 						else{
 							newInstruction = new ICONST(0);
 						}
 						break;
-					
+
+					case IF_ICMPLT:
+						if(operands[0].intValue() >= operands[1].intValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
+					case IF_ICMPEQ:
+						if(operands[0].intValue() != operands[1].intValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
+					case IF_ICMPNE:
+						if(operands[0].intValue() == operands[1].intValue()){
+							newInstruction = new ICONST(1);
+						}
+						else{
+							newInstruction = new ICONST(0);
+						}
+						break;
+
 
 				}
 
