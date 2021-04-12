@@ -213,7 +213,7 @@ public class ConstantFolder
 	}
 
 	enum compareOps{
-		LCMP,DCMPG,DCMPL,FCMPG,FCMPL,IF_ICMPGE, IF_ICMPEQ, IF_ICMPLT, IF_ICMPNE,IF_ICMPGT, IF_ICMPLE, IFGE, IFLE,IFLT,IFGT,IFNE,IFEQ;
+		LCMP,DCMPG,DCMPL,FCMPG,FCMPL,IF_ICMPGE, IF_ICMPEQ, IF_ICMPLT, IF_ICMPNE,IF_ICMPGT, IF_ICMPLE, IFGE, IFLE,IFLT,IFGT,IFNE,IFEQ,ICONST;
 	}
 
 	enum unaryOps{
@@ -223,7 +223,7 @@ public class ConstantFolder
 	public boolean comparisonFold(InstructionList il, ConstantPoolGen cpgen,VariableTable variableTable){
 		boolean changed = false;
 		InstructionFinder itf = new InstructionFinder(il);
-		Iterator iter = itf.search("PushInstruction PushInstruction (LCMP | DCMPL | DCMPG | FCMPL | FCMPG) InstructionTargeter PushInstruction UnconditionalBranch PushInstruction");
+		Iterator iter = itf.search("PushInstruction PushInstruction (LCMP | DCMPL | DCMPG | FCMPL | FCMPG |) InstructionTargeter PushInstruction UnconditionalBranch PushInstruction");
 
 		if (iter.hasNext()){
 			//Iterator return InstructionHandle

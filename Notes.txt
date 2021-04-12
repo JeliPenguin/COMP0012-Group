@@ -1,3 +1,0 @@
-Haven't added constant folding for comparisons
-
-Does not work for dynamic folding as I haven't taken range into account
